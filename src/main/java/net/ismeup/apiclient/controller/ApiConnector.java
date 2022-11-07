@@ -1,9 +1,7 @@
 package net.ismeup.apiclient.controller;
 
-import net.ismeup.apiclient.model.ApiConnectionData;
-import net.ismeup.apiclient.model.LoginAnswer;
-import net.ismeup.apiclient.model.LoginData;
-import net.ismeup.apiclient.model.TokenStorage;
+import net.ismeup.apiclient.exceptions.ConnectionFailException;
+import net.ismeup.apiclient.model.*;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -69,13 +67,18 @@ public class ApiConnector {
             String requestResult = new String(byteArrayOutputStream.toByteArray());
             printDebug(requestResult);
             JSONObject requestResultJson = new JSONObject(requestResult);
-            apiResult = new ApiResult(requestResultJson.optString("status", "error").equals("ok"), requestResultJson);
+            apiResult = new ApiResult(requestResultJson.optString("status", "error").equals("ok"), requestResultJson, false);
             String setCookie = httpURLConnection.getHeaderField("Set-cookie");
             if (setCookie != null && !setCookie.equals(cookie)) {
                 cookie = setCookie;
             }
         } catch (IOException e) {
-            System.out.println("Network error. Try again later");
+            if (connectionData.isDefault()) {
+                System.out.println("Network error. Try again later");
+            } else {
+                System.out.println("Network error. Try again later or check connection URL");
+            }
+            apiResult = ApiResult.interrupted();
         } finally {
             try {
                 outputStream.close();
@@ -95,15 +98,19 @@ public class ApiConnector {
         return postOperation(remoteComponent, operation, null);
     }
 
-    public boolean authenticate(LoginData loginData) {
+    public boolean authenticate(LoginData loginData) throws ConnectionFailException {
         boolean returnValue = false;
         ApiResult apiResult = postOperation("login", "generate_token", new JSONObject().put("loginData", loginData.toJson()));
-        if (apiResult.isOk() && apiResult.getAnswer().optJSONObject("answer") instanceof JSONObject) {
-            LoginAnswer loginAnswer = LoginAnswer.fromJson(apiResult.getAnswer().getJSONObject("answer"));
-            if (loginAnswer.getCode() == 1) {
-                tokenStorage.setToken(loginAnswer.getToken());
-                returnValue = true;
+        if (!apiResult.isConnectionInterrupted()) {
+            if (apiResult.isOk() && apiResult.getAnswer().optJSONObject("answer") instanceof JSONObject) {
+                LoginAnswer loginAnswer = LoginAnswer.fromJson(apiResult.getAnswer().getJSONObject("answer"));
+                if (loginAnswer.getCode() == 1) {
+                    tokenStorage.setToken(loginAnswer.getToken());
+                    returnValue = true;
+                }
             }
+        } else {
+            throw new ConnectionFailException();
         }
         return returnValue;
     }

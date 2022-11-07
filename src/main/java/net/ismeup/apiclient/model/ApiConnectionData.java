@@ -9,7 +9,9 @@ public class ApiConnectionData {
 
     private URL url;
 
-    private ApiConnectionData(URL url) {
+    private boolean isDefault = false;
+
+    private ApiConnectionData(URL url, boolean isDefault) {
         this.url = url;
     }
 
@@ -24,12 +26,16 @@ public class ApiConnectionData {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        return new ApiConnectionData(url);
+        return new ApiConnectionData(url, true);
     }
 
     public static ApiConnectionData parse(String urlParameter) throws MalformedURLException {
         URL url = null;
         url = new URL(urlParameter);
-        return new ApiConnectionData(url);
+        return new ApiConnectionData(url, false);
+    }
+
+    public boolean isDefault() {
+        return isDefault;
     }
 }

@@ -1,4 +1,4 @@
-package net.ismeup.apiclient.controller;
+package net.ismeup.apiclient.model;
 
 import org.json.JSONObject;
 
