@@ -73,7 +73,7 @@ public class CmdLineInput {
     }
 
     public LoginData authenticate(String appname, int lifetime) {
-        System.out.println("To register this watcher in standalone mode, provide your login and password");
+        System.out.println("To register this " + appname + " in standalone mode, provide your login and password");
         System.out.println("If you are using \"Sign in with Apple\" or \"Sign in with Google\" function, you still can set password for your account");
         System.out.println("To do this, open \"My account\" page in your mobile app or in Web-browser and set new password");
         System.out.println("This will not affect your \"Sign in with Apple\" or \"Sign in with Google\" functionality. You will be able to use this functions.");
